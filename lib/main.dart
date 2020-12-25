@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:quizzler_flutter/quizbrain.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 
 QuizBrain quizBrain = QuizBrain();
 
@@ -29,21 +32,31 @@ class QuizPage extends StatefulWidget {
 
 class _QuizPageState extends State<QuizPage> {
   List<Icon> scoreKeeper = [];
+  int marks = 0;
 
   void checkAnswer(bool userPickedAnswer){
     bool ans = quizBrain.getAns();
-    if(ans == userPickedAnswer) print('you got it right');
-    else
-      print('you got it wrong');
-    setState(() {
+
+    if(ans == userPickedAnswer) marks++;  //to show total marks in Alert
+
+     setState(() {
       if (ans == userPickedAnswer)
         scoreKeeper.add(_true());
       else
         scoreKeeper.add(_false());
 
-      quizBrain.nextQuestion();
+      if(quizBrain.nextQuestion()){
+        //nothing to-do
+      }
+      else{
+        _finishedAlert(context, marks);
+        resetScoreKeeper(scoreKeeper);
+        marks = 0;
+        quizBrain.reset();
+      }
     });
   }
+
 
 
   @override
@@ -123,4 +136,40 @@ Icon _true(){
 //method: wrong answer
 Icon _false(){
   return Icon(Icons.close, color: Colors.red,);
+}
+
+
+//method: on finished -> Alert button
+void _finishedAlert(context, int marks){
+  Alert(
+    context: context,
+    type: AlertType.warning,
+    title: "Finished",
+    desc: "You've got $marks! Wanna Try Again?",
+    buttons: [
+      DialogButton(
+        child: Text(
+          "Exit",
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
+        onPressed: () => exit(0),
+        color: Color.fromRGBO(0, 179, 134, 1.0),
+      ),
+      DialogButton(
+        child: Text(
+          "Retry",
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
+        onPressed: () => Navigator.pop(context),
+        gradient: LinearGradient(colors: [
+          Color.fromRGBO(116, 116, 191, 1.0),
+          Color.fromRGBO(52, 138, 199, 1.0)
+        ]),
+      )
+    ],
+  ).show();
+}
+
+void resetScoreKeeper(List<Icon> scoreKeeper){
+  scoreKeeper.length = 0;
 }
